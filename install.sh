@@ -24,7 +24,11 @@ curl -sSL "$CLIENT_URL" -o "$TEMP_FILE"
 # Prepend a shebang if missing
 if ! head -n 1 "$TEMP_FILE" | grep -q "^#!"; then
   echo "Adding shebang to the client code..."
-  sed -i '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
+  if [[ "$(uname)" == "Darwin" ]]; then
+    sed -i '' '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
+  else
+    sed -i '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
+  fi
 fi
 
 # Move the file to the installation directory and make it executable
@@ -36,7 +40,7 @@ echo "Client installed to $INSTALL_FILE"
 echo "Installing required Python packages..."
 pip3 install --upgrade --user requests pyperclip python-socketio
 
-# Automatically add INSTALL_DIR to PATH if not already in the current session
+# Automatically add INSTALL_DIR to PATH for the current session
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   export PATH="$PATH:$INSTALL_DIR"
 fi
