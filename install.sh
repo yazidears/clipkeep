@@ -9,7 +9,6 @@ for cmd in python3 pip3 curl; do
   fi
 done
 
-# Define variables
 CLIENT_URL="https://raw.githubusercontent.com/yazidears/clipkeep/refs/heads/main/clipkeep.py"
 INSTALL_DIR="$HOME/.local/bin"
 INSTALL_FILE="$INSTALL_DIR/clipkeep"
@@ -17,12 +16,12 @@ INSTALL_FILE="$INSTALL_DIR/clipkeep"
 # Create the installation directory if it doesn't exist
 mkdir -p "$INSTALL_DIR"
 
-# Download the client code to a temporary file
-TEMP_FILE=$(mktemp)
+# Download the client code
 echo "Downloading clipkeep client..."
+TEMP_FILE=$(mktemp)
 curl -sSL "$CLIENT_URL" -o "$TEMP_FILE"
 
-# Ensure the file has a proper shebang; if not, prepend it
+# Prepend a shebang if missing
 if ! head -n 1 "$TEMP_FILE" | grep -q "^#!"; then
   echo "Adding shebang to the client code..."
   sed -i '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
@@ -33,29 +32,35 @@ mv "$TEMP_FILE" "$INSTALL_FILE"
 chmod +x "$INSTALL_FILE"
 echo "Client installed to $INSTALL_FILE"
 
-# Install required Python dependencies locally
+# Install required Python dependencies
 echo "Installing required Python packages..."
 pip3 install --upgrade --user requests pyperclip python-socketio
 
-# Ensure that INSTALL_DIR is in the user's PATH
+# Automatically add INSTALL_DIR to PATH if not already in the current session
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-  echo "Warning: $INSTALL_DIR is not in your PATH."
-  SHELL_RC=""
-  if [ -f "$HOME/.bashrc" ]; then
-    SHELL_RC="$HOME/.bashrc"
-  elif [ -f "$HOME/.zshrc" ]; then
+  export PATH="$PATH:$INSTALL_DIR"
+fi
+
+# Automatically update the user's shell configuration file
+if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
+  if [ -n "$ZSH_VERSION" ]; then
     SHELL_RC="$HOME/.zshrc"
-  fi
-  if [ -n "$SHELL_RC" ]; then
-    echo "Adding $INSTALL_DIR to PATH in $SHELL_RC"
-    echo "export PATH=\$PATH:$INSTALL_DIR" >> "$SHELL_RC"
-    echo "Please run 'source $SHELL_RC' or restart your terminal."
+  elif [ -n "$BASH_VERSION" ]; then
+    SHELL_RC="$HOME/.bashrc"
   else
-    echo "Please add $INSTALL_DIR to your PATH manually."
+    SHELL_RC="$HOME/.profile"
+  fi
+  if [ -f "$SHELL_RC" ]; then
+    if ! grep -q "$INSTALL_DIR" "$SHELL_RC"; then
+      echo "export PATH=\$PATH:$INSTALL_DIR" >> "$SHELL_RC"
+      echo "Added $INSTALL_DIR to PATH in $SHELL_RC. Please run 'source $SHELL_RC' or restart your terminal."
+    fi
+  else
+    echo "No shell configuration file found. Please add $INSTALL_DIR to your PATH manually."
   fi
 fi
 
-# Test the server connection by calling the /ping endpoint
+# Test connection to the server
 echo "Testing connection to the server..."
 PING_OUTPUT=$(curl -sSL http://clipkeep.yzde.es/ping)
 if echo "$PING_OUTPUT" | grep -q '"status": "ok"'; then
