@@ -24,11 +24,10 @@ curl -sSL "$CLIENT_URL" -o "$TEMP_FILE"
 # Prepend a shebang if missing
 if ! head -n 1 "$TEMP_FILE" | grep -q "^#!"; then
   echo "Adding shebang to the client code..."
-  if [[ "$(uname)" == "Darwin" ]]; then
-    sed -i '' '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
-  else
-    sed -i '1s;^;#!/usr/bin/env python3\n;' "$TEMP_FILE"
-  fi
+  TEMP_WITH_SHEBANG=$(mktemp)
+  echo '#!/usr/bin/env python3' > "$TEMP_WITH_SHEBANG"
+  cat "$TEMP_FILE" >> "$TEMP_WITH_SHEBANG"
+  mv "$TEMP_WITH_SHEBANG" "$TEMP_FILE"
 fi
 
 # Move the file to the installation directory and make it executable
@@ -72,10 +71,9 @@ else
   echo "Warning: Unable to connect to the server. Please check your network or server status."
 fi
 
-# Inform the user that the command is now installed.
 echo "clipkeep installed successfully! You can now run 'clipkeep' from your terminal."
 
-# Offer to reload the shell so that the new PATH is available immediately.
+# Optionally, offer to reload the shell to update the PATH immediately
 if [ -t 1 ]; then
   read -r -p "Do you want to reload your shell now to update your PATH? (y/N) " answer
   if [[ "$answer" =~ ^[Yy]$ ]]; then
