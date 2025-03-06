@@ -23,7 +23,7 @@ def add_log(passkey, event, device=None):
 
 @app.route('/ping', methods=['GET'])
 def ping():
-    return jsonify({'status': 'ok', 'timestamp': time.time()}), 200
+    return jsonify({'status': 'ok', 'timestamp': time.time(), 'version': 'bussy'}), 200
 
 @app.route('/clipboard', methods=['POST'])
 def add_clipboard():
