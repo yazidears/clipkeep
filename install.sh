@@ -40,37 +40,46 @@ echo "Client installed to $INSTALL_FILE"
 echo "Installing required Python packages..."
 pip3 install --upgrade --user requests pyperclip python-socketio
 
-# Automatically add INSTALL_DIR to PATH for the current session
+# For the current session, add INSTALL_DIR to PATH if not already present
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   export PATH="$PATH:$INSTALL_DIR"
 fi
 
 # Automatically update the user's shell configuration file
-if ! echo "$PATH" | grep -q "$INSTALL_DIR"; then
-  if [ -n "$ZSH_VERSION" ]; then
-    SHELL_RC="$HOME/.zshrc"
-  elif [ -n "$BASH_VERSION" ]; then
-    SHELL_RC="$HOME/.bashrc"
-  else
-    SHELL_RC="$HOME/.profile"
+if [ -n "$ZSH_VERSION" ]; then
+  SHELL_RC="$HOME/.zshrc"
+elif [ -n "$BASH_VERSION" ]; then
+  SHELL_RC="$HOME/.bashrc"
+else
+  SHELL_RC="$HOME/.profile"
+fi
+
+if [ -f "$SHELL_RC" ]; then
+  if ! grep -q "$INSTALL_DIR" "$SHELL_RC"; then
+    echo "export PATH=\$PATH:$INSTALL_DIR" >> "$SHELL_RC"
+    echo "Added $INSTALL_DIR to PATH in $SHELL_RC."
   fi
-  if [ -f "$SHELL_RC" ]; then
-    if ! grep -q "$INSTALL_DIR" "$SHELL_RC"; then
-      echo "export PATH=\$PATH:$INSTALL_DIR" >> "$SHELL_RC"
-      echo "Added $INSTALL_DIR to PATH in $SHELL_RC. Please run 'source $SHELL_RC' or restart your terminal."
-    fi
-  else
-    echo "No shell configuration file found. Please add $INSTALL_DIR to your PATH manually."
-  fi
+else
+  echo "No shell configuration file found. Please add $INSTALL_DIR to your PATH manually."
 fi
 
 # Test connection to the server
 echo "Testing connection to the server..."
-PING_OUTPUT=$(curl -sSL http://clipkeep.yzde.es/ping)
+PING_OUTPUT=$(curl -sSL http://clipkeep.yzde.es/ping || true)
 if echo "$PING_OUTPUT" | grep -q '"status": "ok"'; then
   echo "Server connection successful: $PING_OUTPUT"
 else
   echo "Warning: Unable to connect to the server. Please check your network or server status."
 fi
 
+# Inform the user that the command is now installed.
 echo "clipkeep installed successfully! You can now run 'clipkeep' from your terminal."
+
+# Offer to reload the shell so that the new PATH is available immediately.
+if [ -t 1 ]; then
+  read -r -p "Do you want to reload your shell now to update your PATH? (y/N) " answer
+  if [[ "$answer" =~ ^[Yy]$ ]]; then
+    echo "Reloading shell..."
+    exec "$SHELL" -l
+  fi
+fi
