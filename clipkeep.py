@@ -31,7 +31,6 @@ def save_config(cfg):
 def setkey(passkey):
     cfg = load_config()
     cfg["passkey"] = passkey
-    # Set a default device name if not already set
     cfg.setdefault("device", os.uname().nodename if hasattr(os, "uname") else "unknown")
     save_config(cfg)
     print("Passkey set.")
