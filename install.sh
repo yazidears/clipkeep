@@ -39,10 +39,15 @@ echo "Client installed to $INSTALL_FILE"
 echo "Installing required Python packages..."
 pip3 install --upgrade --user requests pyperclip python-socketio
 
-# For the current session, add INSTALL_DIR to PATH if not already present
+# Add INSTALL_DIR to PATH permanently if not already present
 if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
-  export PATH="$PATH:$INSTALL_DIR"
+  echo "export PATH=\$HOME/.local/bin:\$PATH" >> "$SHELL_RC"
+  echo "Added $INSTALL_DIR to PATH in $SHELL_RC."
 fi
+
+# Apply the changes immediately
+export PATH="$HOME/.local/bin:$PATH"
+source "$SHELL_RC"
 
 # Automatically update the user's shell configuration file
 if [ -n "$ZSH_VERSION" ]; then
@@ -70,7 +75,9 @@ if echo "$PING_OUTPUT" | grep -q '"status": "ok"'; then
 else
   echo "Warning: Unable to connect to the server. Please check your network or server status."
 fi
-
+echo "if clipkeep doesn't run when you try to summon it, try with the next command:"
+echo "export PATH=$HOME/.local/bin:$PATH"
+echo "note that this is a temporal solution"
 echo "clipkeep installed successfully! You can now run 'clipkeep' from your terminal."
 
 # Optionally, offer to reload the shell to update the PATH immediately
