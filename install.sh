@@ -81,6 +81,8 @@ if echo "$PING_OUTPUT" | grep -q '"status": "ok"'; then
   echo "Server connection successful: $PING_OUTPUT"
 else
   echo "Warning: Unable to connect to the server. Please check your network or server status."
+  echo "warning, but honest: it's probably us and not you :D"
+
 fi
 echo "if clipkeep doesn't run when you try to summon it, try with the next command:"
 echo "export PATH=$HOME/.local/bin:$PATH"
