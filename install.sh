@@ -45,9 +45,16 @@ if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
   echo "Added $INSTALL_DIR to PATH in $SHELL_RC."
 fi
 
+
 # Apply the changes immediately
 export PATH="$HOME/.local/bin:$PATH"
-source "$SHELL_RC"
+
+# Source the shell configuration file only if it exists
+if [ -f "$SHELL_RC" ]; then
+  source "$SHELL_RC"
+else
+  echo "Warning: $SHELL_RC not found. Restart your terminal for changes to take effect."
+fi
 
 # Automatically update the user's shell configuration file
 if [ -n "$ZSH_VERSION" ]; then
